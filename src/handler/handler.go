@@ -6,16 +6,16 @@ import (
 	"log"
 	"net/http"
 
+	interfaces "github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/_interfaces"
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/responses"
-	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/useCases/users_service"
 	"github.com/aws/aws-lambda-go/events"
 )
 
 type UserHandler struct {
-	userService users_service.IUserService
+	userService interfaces.UserService
 }
 
-func NewUserHandler(userService users_service.IUserService) *UserHandler {
+func NewUserHandler(userService interfaces.UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}

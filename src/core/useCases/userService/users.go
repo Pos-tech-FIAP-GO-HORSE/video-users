@@ -1,33 +1,33 @@
-package users_service
+package userService
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"os"
+	"log"
 	"time"
 
+	interfaces "github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/_interfaces"
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/domain/entity"
-	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/repositories/user_repository"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type IUserService interface {
-	Create(ctx context.Context, user *entity.User) (*entity.User, error)
-	Login(ctx context.Context, email, password string) (string, error)
+type userService struct {
+	jwtSecretKey   string
+	userRepository interfaces.UserRepository
+	publisher      interfaces.Publisher
 }
 
-type UserService struct {
-	userRepository user_repository.IUserRepository
-}
-
-func NewUserService(userRepository user_repository.IUserRepository) IUserService {
-	return &UserService{
+func NewUserService(jwtSecretKey string, userRepository interfaces.UserRepository, publisher interfaces.Publisher) interfaces.UserService {
+	return &userService{
+		jwtSecretKey:   jwtSecretKey,
 		userRepository: userRepository,
+		publisher:      publisher,
 	}
 }
 
-func (ref *UserService) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
+func (ref *userService) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
 	foundUser, err := ref.userRepository.FindByEmail(ctx, user.Email)
 	if err != nil {
 		return nil, err
@@ -44,10 +44,22 @@ func (ref *UserService) Create(ctx context.Context, user *entity.User) (*entity.
 
 	user.PasswordHash = string(passwordHash)
 
-	return ref.userRepository.Create(ctx, user)
+	createdUser, err := ref.userRepository.Create(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	messageRaw, _ := json.Marshal(createdUser)
+	if err = ref.publisher.Publish(ctx, string(messageRaw)); err != nil {
+		return nil, err
+	}
+
+	log.Println("[INFO] published message:", string(messageRaw))
+
+	return createdUser, nil
 }
 
-func (ref *UserService) Login(ctx context.Context, email string, password string) (string, error) {
+func (ref *userService) Login(ctx context.Context, email string, password string) (string, error) {
 	foundUser, err := ref.userRepository.FindByEmail(ctx, email)
 	if err != nil {
 		return "", err
@@ -66,7 +78,7 @@ func (ref *UserService) Login(ctx context.Context, email string, password string
 		"exp":     time.Now().Add(time.Hour).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	tokenString, err := token.SignedString([]byte(ref.jwtSecretKey))
 	if err != nil {
 		return "", err
 	}
