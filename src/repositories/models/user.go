@@ -7,35 +7,32 @@ import (
 )
 
 type User struct {
-	ID            string    `json:"id" bson:"_id,omitempty"`
-	IntegrationID string    `json:"integration_id" bson:"integration_id"`
-	Name          string    `json:"name" bson:"name"`
-	Email         string    `json:"email" bson:"email"`
-	PasswordHash  string    `json:"password_hash" bson:"password_hash"`
-	CreatedAt     time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" bson:"updated_at"`
+	ID           string    `json:"id" bson:"_id,omitempty"`
+	Name         string    `json:"name" bson:"name"`
+	Email        string    `json:"email" bson:"email"`
+	PasswordHash string    `json:"password_hash" bson:"password_hash"`
+	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 func (ref User) ToDomain() *entity.User {
 	return &entity.User{
-		ID:            ref.ID,
-		IntegrationID: ref.IntegrationID,
-		Name:          ref.Name,
-		Email:         ref.Email,
-		PasswordHash:  ref.PasswordHash,
-		CreatedAt:     ref.CreatedAt,
-		UpdatedAt:     ref.UpdatedAt,
+		ID:           ref.ID,
+		Name:         ref.Name,
+		Email:        ref.Email,
+		PasswordHash: ref.PasswordHash,
+		CreatedAt:    ref.CreatedAt,
+		UpdatedAt:    ref.UpdatedAt,
 	}
 }
 
 func UserFromDomain(user *entity.User) User {
 	return User{
-		ID:            user.ID,
-		IntegrationID: user.IntegrationID,
-		Name:          user.Name,
-		Email:         user.Email,
-		PasswordHash:  user.PasswordHash,
-		CreatedAt:     user.CreatedAt,
-		UpdatedAt:     user.UpdatedAt,
+		ID:           user.ID,
+		Name:         user.Name,
+		Email:        user.Email,
+		PasswordHash: user.PasswordHash,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
 	}
 }

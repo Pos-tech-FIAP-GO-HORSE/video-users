@@ -1,9 +1,10 @@
-package user_repository
+package userRepo
 
 import (
 	"context"
 	"time"
 
+	interfaces "github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/_interfaces"
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/domain/entity"
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/repositories/models"
 	"github.com/google/uuid"
@@ -11,27 +12,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type IUserRepository interface {
-	Create(ctx context.Context, user *entity.User) (*entity.User, error)
-	FindByEmail(ctx context.Context, email string) (*entity.User, error)
-}
-
-type UserRepository struct {
+type userRepository struct {
 	collection *mongo.Collection
 }
 
-func NewUserRepository(collection *mongo.Collection) IUserRepository {
-	return &UserRepository{
+func NewUserRepository(collection *mongo.Collection) interfaces.UserRepository {
+	return &userRepository{
 		collection: collection,
 	}
 }
 
-func (ref *UserRepository) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
+func (ref *userRepository) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
 	record := models.UserFromDomain(user)
 
 	now := time.Now()
 	record.ID = uuid.NewString()
-	record.IntegrationID = uuid.NewString()
 	record.CreatedAt = now
 	record.UpdatedAt = now
 
@@ -53,7 +48,7 @@ func (ref *UserRepository) Create(ctx context.Context, user *entity.User) (*enti
 	return foundUser.ToDomain(), nil
 }
 
-func (ref *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (ref *userRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	result := ref.collection.FindOne(ctx, bson.M{"email": email})
 
 	if result.Err() != nil {
