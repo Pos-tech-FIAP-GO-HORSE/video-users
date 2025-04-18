@@ -8,12 +8,12 @@ import (
 
 type User struct {
 	ID            string    `json:"id" bson:"_id,omitempty"`
-	IntegrationID string    `json:"integrationId" bson:"integrationId"`
+	IntegrationID string    `json:"integration_id" bson:"integration_id"`
 	Name          string    `json:"name" bson:"name"`
 	Email         string    `json:"email" bson:"email"`
-	PasswordHash  string    `json:"passwordHash" bson:"passwordHash"`
-	CreatedAt     time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt" bson:"updatedAt"`
+	PasswordHash  string    `json:"password_hash" bson:"password_hash"`
+	CreatedAt     time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 func (ref User) ToDomain() *entity.User {

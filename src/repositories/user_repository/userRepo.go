@@ -8,7 +8,6 @@ import (
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/repositories/models"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -36,14 +35,12 @@ func (ref *UserRepository) Create(ctx context.Context, user *entity.User) (*enti
 	record.CreatedAt = now
 	record.UpdatedAt = now
 
-	created, err := ref.collection.InsertOne(ctx, record)
+	_, err := ref.collection.InsertOne(ctx, record)
 	if err != nil {
 		return nil, err
 	}
 
-	objectID := created.InsertedID.(primitive.ObjectID)
-
-	result := ref.collection.FindOne(ctx, bson.M{"_id": objectID})
+	result := ref.collection.FindOne(ctx, bson.M{"_id": record.ID})
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
