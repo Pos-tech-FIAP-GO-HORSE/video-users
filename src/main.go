@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func main() {
@@ -21,10 +22,14 @@ func main() {
 	clientOptions := options.Client().ApplyURI(os.Getenv("DB_URI"))
 	dbClient, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatalf("unable to connect on database: %v", err)
+		log.Fatalf("[ERROR] unable to connect on database: %v", err)
 	}
 
-	log.Println("database connected successfully")
+	if err = dbClient.Ping(ctx, readpref.Primary()); err != nil {
+		log.Fatalf("[ERROR] unable to ping the database: %v", err)
+	}
+
+	log.Println("[INFO] database connected successfully")
 
 	database := dbClient.Database(os.Getenv("DB_NAME"))
 	usersCollection := database.Collection("users")

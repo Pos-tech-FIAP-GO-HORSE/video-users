@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/responses"
 	"github.com/Pos-tech-FIAP-GO-HORSE/video-users/src/core/useCases/users_service"
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -20,56 +21,53 @@ func NewUserHandler(userService users_service.IUserService) *UserHandler {
 	}
 }
 
-func (ref *UserHandler) Handle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (ref *UserHandler) Handle(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	switch {
-	case request.Path == "/users" && request.HTTPMethod == http.MethodPost:
+	case request.RawPath == "/video-user/users" && request.RequestContext.HTTP.Method == http.MethodPost:
 		return ref.handleCreateUser(ctx, request)
-	case request.Path == "/users/login" && request.HTTPMethod == http.MethodPost:
+	case request.RawPath == "/video-user/users/login" && request.RequestContext.HTTP.Method == http.MethodPost:
 		return ref.handleLogin(ctx, request)
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusNotFound,
-		Body:       "Not Found",
-	}, nil
+	return apiGatewayResponseWithError(http.StatusNotFound, "route not found"), nil
 }
 
-func (ref *UserHandler) handleCreateUser(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (ref *UserHandler) handleCreateUser(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	var body CreateUserRequest
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
-		log.Println("error to decode create request body:", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Invalid JSON: " + err.Error()}, nil
+		log.Println("[ERROR] error to decode create request body:", err)
+		return apiGatewayResponseWithError(http.StatusBadRequest, "invalid json: "+err.Error()), nil
 	}
 
 	user, err := ref.userService.Create(ctx, body.ToDomain())
 	if err != nil {
-		log.Println("error to create user:", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError, Body: "Internal Server Error: " + err.Error()}, nil
+		log.Println("[ERROR] error to create user:", err)
+		return apiGatewayResponseWithError(http.StatusInternalServerError, err.Error()), nil
 	}
 
-	response := CreateUserResponseFromDomain(user)
+	response := responses.UserFromDomain(user)
 	responseRaw, _ := json.Marshal(response)
 
-	log.Println("user created successfully")
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusCreated, Body: string(responseRaw)}, nil
+	log.Println("[INFO] user created successfully")
+	return apiGatewayResponse(http.StatusCreated, string(responseRaw)), nil
 }
 
-func (ref *UserHandler) handleLogin(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (ref *UserHandler) handleLogin(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	var body LoginRequest
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
-		log.Println("error to decode login request body:", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Invalid JSON: " + err.Error()}, nil
+		log.Println("[ERROR] error to decode login request body:", err)
+		return apiGatewayResponseWithError(http.StatusBadRequest, "invalid json: "+err.Error()), nil
 	}
 
 	accessToken, err := ref.userService.Login(ctx, body.Email, body.Password)
 	if err != nil {
-		log.Println("error to login:", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: "Unauthorized: " + err.Error()}, nil
+		log.Println("[ERROR] error to login:", err)
+		return apiGatewayResponseWithError(http.StatusUnauthorized, "unauthorized: "+err.Error()), nil
 	}
 
-	response := LoginResponse{AccessToken: accessToken}
+	response := responses.LoginResponse{AccessToken: accessToken}
 	responseRaw, _ := json.Marshal(response)
 
-	log.Println("user logged in successfully")
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: string(responseRaw)}, nil
+	log.Println("[INFO] user logged in successfully")
+	return apiGatewayResponse(http.StatusOK, string(responseRaw)), nil
 }
