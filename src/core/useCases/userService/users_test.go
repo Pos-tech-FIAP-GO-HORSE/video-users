@@ -233,6 +233,6 @@ func TestLogin(t *testing.T) {
 
 		actual, err := userService.Login(ctx, email, password)
 		assert.Equal(t, "", actual)
-		assert.Equal(t, errors.New("crypto/bcrypt: hashedSecret too short to be a bcrypted password"), err)
+		assert.Equal(t, errors.New("crypto/bcrypt: hashedPassword is not the hash of the given password"), err)
 	})
 }
