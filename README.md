@@ -5,7 +5,7 @@ Microserviço responsável pelo gerenciamento de usuários, incluindo operaçõe
 Este projeto foi desenvolvido em Go e utiliza Docker para containerização.
 
 ## Video com explicação
-https://www.youtube.com/watch?v=9fGMerZ8gRs
+https://www.youtube.com/watch?v=AlIQDMKciPo
 
 ---
 
